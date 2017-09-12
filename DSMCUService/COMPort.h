@@ -1,4 +1,4 @@
-// COMPort.h
+// COMPort.h : header file
 // Based on Cypress USB-Serial Windows realisation (uart.cpp)
 //
 // NOTE:

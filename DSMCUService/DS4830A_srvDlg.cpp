@@ -19,9 +19,9 @@ CDS4830A_srvDlg::CDS4830A_srvDlg(CWnd * pParent)
 {
 }
 
-CDS4830A_srvDlg::CDS4830A_srvDlg(HID_SMBUS_DEVICE * pHidSmbus, BYTE mode, DWORD CP2112_activeDeviceNum, st_CP2112_GPConf CP2112_GPConf, CWnd* pParent /*=NULL*/)
+CDS4830A_srvDlg::CDS4830A_srvDlg(CDeviceCommunInterface * pUTBDevice, BYTE mode, DWORD CP2112_activeDeviceNum, st_CP2112_GPConf CP2112_GPConf, CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_DS4830A, pParent)
-	, m_pHidSmbus(pHidSmbus)
+	, m_pUTBDevice(pUTBDevice)
 	, m_Mode(mode)
 	, mc_CP2112_activeDeviceNum(CP2112_activeDeviceNum)
 	, mc_CP2112_GPConf(CP2112_GPConf)
@@ -176,6 +176,28 @@ END_MESSAGE_MAP()
 
 
 // CDS4830A_srvDlg message handlers
+
+void CDS4830A_srvDlg::COMPortMsgQue_Init()
+{
+	// > Init Basic Monitoring Options
+
+	m_frame1[10] = 10;
+
+	// > Set Mon Default Tables
+	BYTE ucCount = 0;
+
+	// TABLE 1:1 / Board_Service
+	m_COMPortMsgQue.v_OID_SHOW[ucCount].ucTableNum = 0x01;
+	m_COMPortMsgQue.v_OID_SHOW[ucCount].ucCounterDivider = 1;
+	m_COMPortMsgQue.v_OID_SHOW[ucCount].ucCounterValue = m_COMPortMsgQue.v_OID_SHOW[ucCount].ucCounterDivider - 1;
+
+	ucCount++;
+	m_COMPortMsgQue.ucMsgCount = ucCount;
+
+	// TABLE 1:2 / Board_Ports
+
+}
+
 
 void CDS4830A_srvDlg::DDM_ConstructStateStr(st_AWFlags st_AWFlagsTemp, CString * str)
 {
@@ -1054,6 +1076,8 @@ BOOL CDS4830A_srvDlg::OnInitDialog()
 
 	InitializeDialog();
 
+	COMPortMsgQue_Init();
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -1073,7 +1097,7 @@ BOOL CDS4830A_srvDlg::OnInitDialog()
 // -------------------------------------------------------------------
 void CDS4830A_srvDlg::StartTimer()
 {
-	m_nTimer = SetTimer(TIMER_ID_SYSTEM, 100, NULL);
+	m_nTimer = SetTimer(TIMER_ID_SYSTEM, 1000, NULL);
 }
 
 void CDS4830A_srvDlg::StopTimer()
@@ -1102,7 +1126,43 @@ void CDS4830A_srvDlg::OnTimer(UINT_PTR nIDEvent)
 	// TODO: Add your message handler code here and/or call default
 	switch (nIDEvent)
 	{
-	case TIMER_ID_SYSTEM:	// Proceed controls ENABLE/DISABLE status		
+	case TIMER_ID_SYSTEM:	// Proceed MCU COM Port Communication Arbitrage
+
+		// NOTE:
+		// FORMAT:
+		// Send 1 SHOW Request   --->
+		// Get  1 SHOW Responce  <---
+		
+		for (UCHAR k = 0; k < m_COMPortMsgQue.ucMsgCount; k++)
+		{
+			if (m_COMPortMsgQue.v_OID_SHOW[k].ucCounterValue == 0)
+			{
+				// [PROCEED]
+
+				// Monitor and Update Device Data 
+				channelFrame frFrameTmp;
+				m_pUTBDevice->ShowTable(TABLE_BOARD_SERVICE, &frFrameTmp); 
+
+
+				// restore Counter
+				m_COMPortMsgQue.v_OID_SHOW[k].ucCounterValue = m_COMPortMsgQue.v_OID_SHOW[k].ucCounterDivider - 1;
+			}
+			else
+			{
+				// [WAIT]
+
+				m_COMPortMsgQue.v_OID_SHOW[k].ucCounterValue--;
+			}
+
+		}
+		
+		
+
+
+
+		break;
+
+/*
 		if (m_service.activeState == SERVICE_STATE_ENABLE)
 		{
 			// NOP
@@ -1142,8 +1202,7 @@ void CDS4830A_srvDlg::OnTimer(UINT_PTR nIDEvent)
 						// change status state
 						m_service.activeState = SERVICE_STATE_DISABLE;
 					}
-
-		break;
+*/		
 
 	case TIMER_ID_DDM:	// Proceed DDM output Status	
 		

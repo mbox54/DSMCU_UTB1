@@ -135,6 +135,12 @@
     <ClInclude Include="COMPort.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DeviceCommunInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UTBDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DSMCUService.cpp">
@@ -222,6 +228,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="COMPort.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceCommunInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UTBDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

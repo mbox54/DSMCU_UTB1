@@ -25,6 +25,7 @@
 // System Grid
 #include "SLABCP2112.h"
 #include "GridSFF_CP2112.h"
+#include "DeviceCommunInterface.h"
 
 #include "afxwin.h"
 
@@ -275,6 +276,14 @@ typedef struct st_AWFlags
 };
 
 
+struct st_OID_SHOW_PARAMS
+{
+	BYTE ucTableNum;
+	BYTE ucCounterDivider;
+	BYTE ucCounterValue;
+};
+
+
 // ##########################################################################
 // CDS4830A_srvDlg dialog
 // ##########################################################################
@@ -284,7 +293,7 @@ class CDS4830A_srvDlg : public CDialog
 
 public:
 	CDS4830A_srvDlg(CWnd* pParent = NULL);
-	CDS4830A_srvDlg(HID_SMBUS_DEVICE* pHidSmbus, BYTE mode, DWORD CP2112_activeDeviceNum , st_CP2112_GPConf CP2112_GPConf, CWnd* pParent = NULL);
+	CDS4830A_srvDlg(CDeviceCommunInterface * pUTBDevice, BYTE mode, DWORD CP2112_activeDeviceNum , st_CP2112_GPConf CP2112_GPConf, CWnd* pParent = NULL);
 
 	virtual ~CDS4830A_srvDlg();
 
@@ -295,6 +304,7 @@ public:
 
 	// Protected Members
 protected:
+
 	// define users Tab List
 	struct st_UserTabOrder
 	{
@@ -303,8 +313,22 @@ protected:
 		unsigned char v_Tabs_Operator[15] =		{ 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0 };
 	} m_UserTabOrder;
 	
+	// define COMPortMsg Arbiter
+	struct st_COMPortMsgQue
+	{
+		BYTE ucMsgCount;
+		st_OID_SHOW_PARAMS v_OID_SHOW[32];
 
-	HID_SMBUS_DEVICE*		m_pHidSmbus;
+	} m_COMPortMsgQue;
+
+
+	HID_SMBUS_DEVICE* m_pHidSmbus;
+	hSerialCDC* m_phSerialCDC;
+	CDeviceCommunInterface * m_pUTBDevice;
+
+	// !CDeviceCommunInterface
+
+	channelFrame m_frame1;
 
 	// Controls
 	// Tab Dialogs
@@ -376,6 +400,9 @@ public:
 	CStatic m_Static_Logo;
 
 	// > Procedures
+	// init
+	void COMPortMsgQue_Init();
+
 	// service
 	void DDM_ConstructStateStr(st_AWFlags st_AWFlagsTemp, CString * str);
 

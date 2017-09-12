@@ -13,6 +13,8 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include "SLABCP2112.h"
+#include "COMPort.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "afxcmn.h"
@@ -85,7 +87,7 @@ class CDSBootLoader : public CDialog
 public:
 	// Constructors
 	CDSBootLoader(CWnd* pParent = NULL);   // standard constructor
-	CDSBootLoader(HID_SMBUS_DEVICE* pHidSmbus, CWnd* pParent = NULL); 
+	CDSBootLoader(hSerialCDC* phSerialCDC, CWnd* pParent = NULL);
 
 	virtual ~CDSBootLoader();
 
@@ -95,7 +97,8 @@ public:
 #endif
 
 protected:
-	HID_SMBUS_DEVICE* m_pHidSmbus;
+	HID_SMBUS_DEVICE * m_pHidSmbus;
+	hSerialCDC * m_phSerialCDC;
 
 	// Control Variables
 	BYTE		m_slaveAddress;

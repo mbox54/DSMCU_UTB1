@@ -186,6 +186,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="COMPort.h" />
+    <ClInclude Include="DeviceCommunInterface.h" />
     <ClInclude Include="DlgTabCtrl.h" />
     <ClInclude Include="DS4830A_SFF_Custom.h" />
     <ClInclude Include="DS4830A_SFPP_DDM.h" />
@@ -218,9 +219,11 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TB_SFP_R2.h" />
+    <ClInclude Include="UTBDevice.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="COMPort.cpp" />
+    <ClCompile Include="DeviceCommunInterface.cpp" />
     <ClCompile Include="DlgTabCtrl.cpp" />
     <ClCompile Include="DS4830A_SFF_Custom.cpp" />
     <ClCompile Include="DS4830A_SFPP_DDM.cpp" />
@@ -254,6 +257,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="TB_SFP_R2.cpp" />
+    <ClCompile Include="UTBDevice.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DSMCUService.rc" />

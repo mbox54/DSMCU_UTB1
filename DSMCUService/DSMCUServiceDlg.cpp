@@ -354,10 +354,12 @@ BOOL CDSMCUServiceDlg::Disconnect()
 BOOL CDSMCUServiceDlg::Connect_MCU()
 {
 	// > Get COM Number
+	UpdateData(TRUE);
+
 	BYTE dwComNum = (BYTE)_tcstoul(this->m_sEdit_COM_NUM, NULL, 10);
 
 	// > Connect
-	int iResult = COMPort_Open(&m_hSerialCDC, dwComNum);
+	int iResult = m_UTBDevice.Connect(dwComNum);
 
 
 	return iResult;
@@ -728,7 +730,7 @@ void CDSMCUServiceDlg::OnBnClickedOk()
 
 
 	// open module dialog 
-    CDS4830A_srvDlg DS4830A_srvDlg(&this->m_hidSmbus, MD_ENGINEER, CP2112_activeDeviceNum, CP2112_GPConf);
+    CDS4830A_srvDlg DS4830A_srvDlg(&this->m_UTBDevice, MD_ENGINEER, CP2112_activeDeviceNum, CP2112_GPConf);
 	DS4830A_srvDlg.DoModal();
 
 
@@ -772,7 +774,7 @@ void CDSMCUServiceDlg::OnBnClickedCheckConnect()
 		// try to connect
 		int iResult = Connect_MCU();
 
-		if (iResult)
+		if (iResult == DEVICE_OP_SUCCESS)
 		{
 			// success
 
@@ -810,7 +812,7 @@ void CDSMCUServiceDlg::OnBnClickedButtonOperator()
 	// # set Mode MD_OPERATOR
 
 	// open module dialog 
-	CDS4830A_srvDlg DS4830A_srvDlg(&this->m_hidSmbus, MD_OPERATOR, CP2112_activeDeviceNum, CP2112_GPConf);
+	CDS4830A_srvDlg DS4830A_srvDlg(&this->m_UTBDevice, MD_OPERATOR, CP2112_activeDeviceNum, CP2112_GPConf);
 	DS4830A_srvDlg.DoModal();
 
 	CDialogEx::OnOK();
@@ -821,7 +823,7 @@ void CDSMCUServiceDlg::OnBnClickedButtonOperator()
 void CDSMCUServiceDlg::OnBnClickedButtonAdmin()
 {
 	// open module dialog 
-	CDS4830A_srvDlg DS4830A_srvDlg(&this->m_hidSmbus, MD_ENGINEER, CP2112_activeDeviceNum, CP2112_GPConf);
+	CDS4830A_srvDlg DS4830A_srvDlg(&this->m_UTBDevice, MD_ENGINEER, CP2112_activeDeviceNum, CP2112_GPConf);
 	DS4830A_srvDlg.DoModal();
 
 	CDialogEx::OnOK();

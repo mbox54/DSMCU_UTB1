@@ -9,6 +9,7 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "SLABCP2112.h"
 #include "COMPort.h"
+#include "DeviceCommunInterface.h"
 
 #include "afxwin.h"
 
@@ -18,7 +19,7 @@
 // Definitions
 /////////////////////////////////////////////////////////////////////////////
 
-#define VID					0
+#define VID					0 
 #define PID					0
 
 struct st_CP2112_GPConf
@@ -53,6 +54,7 @@ protected:
 //  SiLabs CP2112 Driver
 	HID_SMBUS_DEVICE		m_hidSmbus;
 	hSerialCDC				m_hSerialCDC;
+	CDeviceCommunInterface	m_UTBDevice;
 
 	DWORD dwComNum = 0;
 

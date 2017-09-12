@@ -17,15 +17,18 @@ CDSBootLoader::CDSBootLoader(CWnd * pParent)
 {
 }
 
-CDSBootLoader::CDSBootLoader(HID_SMBUS_DEVICE* pHidSmbus, CWnd* pParent /*=NULL*/)
+
+CDSBootLoader::CDSBootLoader(hSerialCDC* phSerialCDC, CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_PROPPAGE_BOOTLOAD, pParent)
-	, m_pHidSmbus(pHidSmbus)
+	, m_phSerialCDC(phSerialCDC)
 {
 }
+
 
 CDSBootLoader::~CDSBootLoader()
 {
 }
+
 
 void CDSBootLoader::DoDataExchange(CDataExchange* pDX)
 {
