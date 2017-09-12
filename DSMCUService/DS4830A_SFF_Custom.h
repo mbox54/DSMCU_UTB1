@@ -11,7 +11,7 @@
 // ##########################################################################
 // CDS4830A_SFF_Custom dialog
 // ##########################################################################
-class CDS4830A_SFF_Custom : public CDialog      
+class CDS4830A_SFF_Custom : public CDialog 
 {
 	DECLARE_DYNAMIC(CDS4830A_SFF_Custom)
 
