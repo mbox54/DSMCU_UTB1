@@ -3,12 +3,12 @@
 /////////////////////////////////////////////////////////////////////////////
 // Includes
 /////////////////////////////////////////////////////////////////////////////
-#include "SLABCP2112.h"
 #include "GridSFF_CP2112.h"
 #include "afxwin.h"
 #include "afxcmn.h"
 
-
+#include "SLABCP2112.h"
+#include "UTBDevice.h"
 
 // ##########################################################################
 // CDS4830A_SFPP_A0 dialog
@@ -19,7 +19,7 @@ class CDS4830A_SFPP_A0 : public CDialog
 
 public:
 	CDS4830A_SFPP_A0(CWnd* pParent = NULL);   // standard constructor
-	CDS4830A_SFPP_A0(HID_SMBUS_DEVICE * pHidSmbus, CProgressCtrl * p_cPB_OP, CEdit * p_EDIT_STATUS, st_serviceData * p_service, CWnd * pParent = NULL);
+	CDS4830A_SFPP_A0(CUTBDevice * m_pUTBDevice, CProgressCtrl * p_cPB_OP, CEdit * p_EDIT_STATUS, st_serviceData * p_service, CWnd * pParent = NULL);
 	virtual ~CDS4830A_SFPP_A0();
 
 // Dialog Data
@@ -30,6 +30,7 @@ public:
 // > Resources from Owner dialog
 protected:
 	HID_SMBUS_DEVICE* m_pHidSmbus;
+	CUTBDevice * m_pUTBDevice;
 
 	// service data values
 	st_serviceData* p_service;

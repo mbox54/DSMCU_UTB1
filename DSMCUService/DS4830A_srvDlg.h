@@ -25,7 +25,8 @@
 // System Grid
 #include "SLABCP2112.h"
 #include "GridSFF_CP2112.h"
-#include "DeviceCommunInterface.h"
+#include "UTBDevice.h"
+//#include "DeviceCommunInterface.h"
 
 #include "afxwin.h"
 
@@ -276,14 +277,6 @@ typedef struct st_AWFlags
 };
 
 
-struct st_OID_SHOW_PARAMS
-{
-	BYTE ucTableNum;
-	BYTE ucCounterDivider;
-	BYTE ucCounterValue;
-};
-
-
 // ##########################################################################
 // CDS4830A_srvDlg dialog
 // ##########################################################################
@@ -293,7 +286,7 @@ class CDS4830A_srvDlg : public CDialog
 
 public:
 	CDS4830A_srvDlg(CWnd* pParent = NULL);
-	CDS4830A_srvDlg(CDeviceCommunInterface * pUTBDevice, BYTE mode, DWORD CP2112_activeDeviceNum , st_CP2112_GPConf CP2112_GPConf, CWnd* pParent = NULL);
+	CDS4830A_srvDlg(CDeviceCommunInterface * pUTBDeviceCommun, BYTE mode, DWORD CP2112_activeDeviceNum , st_CP2112_GPConf CP2112_GPConf, CWnd* pParent = NULL);
 
 	virtual ~CDS4830A_srvDlg();
 
@@ -301,6 +294,13 @@ public:
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DS4830A };
 #endif
+
+	// UTB Device Monitor Timer control
+	void UTBDevice_MonitorRestore();
+	void UTBDevice_MonitorBreak();
+
+
+
 
 	// Protected Members
 protected:
@@ -311,20 +311,13 @@ protected:
 		unsigned char v_Tabs_Programmer[15] =	{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 		unsigned char v_Tabs_Engineer[15] =		{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 		unsigned char v_Tabs_Operator[15] =		{ 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0 };
-	} m_UserTabOrder;
-	
-	// define COMPortMsg Arbiter
-	struct st_COMPortMsgQue
-	{
-		BYTE ucMsgCount;
-		st_OID_SHOW_PARAMS v_OID_SHOW[32];
-
-	} m_COMPortMsgQue;
+	} m_UserTabOrder;	
 
 
 	HID_SMBUS_DEVICE* m_pHidSmbus;
-	hSerialCDC* m_phSerialCDC;
-	CDeviceCommunInterface * m_pUTBDevice;
+	// hSerialCDC* m_phSerialCDC;
+	CUTBDevice m_UTBDevice;
+	//CDeviceCommunInterface * m_pUTBDevice;
 
 	// !CDeviceCommunInterface
 
@@ -375,8 +368,6 @@ protected:
 	void EditTimerDDM();
 	void StopTimerDDM();
 
-	
-
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
@@ -401,7 +392,6 @@ public:
 
 	// > Procedures
 	// init
-	void COMPortMsgQue_Init();
 
 	// service
 	void DDM_ConstructStateStr(st_AWFlags st_AWFlagsTemp, CString * str);

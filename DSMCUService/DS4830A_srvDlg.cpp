@@ -19,17 +19,17 @@ CDS4830A_srvDlg::CDS4830A_srvDlg(CWnd * pParent)
 {
 }
 
-CDS4830A_srvDlg::CDS4830A_srvDlg(CDeviceCommunInterface * pUTBDevice, BYTE mode, DWORD CP2112_activeDeviceNum, st_CP2112_GPConf CP2112_GPConf, CWnd* pParent /*=NULL*/)
+CDS4830A_srvDlg::CDS4830A_srvDlg(CDeviceCommunInterface * pUTBDeviceCommun, BYTE mode, DWORD CP2112_activeDeviceNum, st_CP2112_GPConf CP2112_GPConf, CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_DS4830A, pParent)
-	, m_pUTBDevice(pUTBDevice)
+	, m_UTBDevice(pUTBDeviceCommun)
 	, m_Mode(mode)
 	, mc_CP2112_activeDeviceNum(CP2112_activeDeviceNum)
 	, mc_CP2112_GPConf(CP2112_GPConf)
 	// cp2112 grid
 	, m_GridSystem(m_pHidSmbus, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
 	// pages
-	, m_pageDSBootLoader(m_pHidSmbus)
-	, m_DS4830A_SFPP_A0(m_pHidSmbus, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
+	, m_pageDSBootLoader(&m_UTBDevice)
+	, m_DS4830A_SFPP_A0(&m_UTBDevice, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
 	, m_DS4830A_SFPP_A2(m_pHidSmbus, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
 	, m_DS4830A_SFPP_T10(m_pHidSmbus, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
 	, m_DS4830A_SFPP_Custom(m_pHidSmbus, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
@@ -176,27 +176,6 @@ END_MESSAGE_MAP()
 
 
 // CDS4830A_srvDlg message handlers
-
-void CDS4830A_srvDlg::COMPortMsgQue_Init()
-{
-	// > Init Basic Monitoring Options
-
-	m_frame1[10] = 10;
-
-	// > Set Mon Default Tables
-	BYTE ucCount = 0;
-
-	// TABLE 1:1 / Board_Service
-	m_COMPortMsgQue.v_OID_SHOW[ucCount].ucTableNum = 0x01;
-	m_COMPortMsgQue.v_OID_SHOW[ucCount].ucCounterDivider = 1;
-	m_COMPortMsgQue.v_OID_SHOW[ucCount].ucCounterValue = m_COMPortMsgQue.v_OID_SHOW[ucCount].ucCounterDivider - 1;
-
-	ucCount++;
-	m_COMPortMsgQue.ucMsgCount = ucCount;
-
-	// TABLE 1:2 / Board_Ports
-
-}
 
 
 void CDS4830A_srvDlg::DDM_ConstructStateStr(st_AWFlags st_AWFlagsTemp, CString * str)
@@ -1076,7 +1055,6 @@ BOOL CDS4830A_srvDlg::OnInitDialog()
 
 	InitializeDialog();
 
-	COMPortMsgQue_Init();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
@@ -1120,6 +1098,18 @@ void CDS4830A_srvDlg::StopTimerDDM()
 	KillTimer(m_nTimerDDM);
 }
 
+// UTB Device Monitor Timer control
+void CDS4830A_srvDlg::UTBDevice_MonitorRestore()
+{
+	StartTimer();
+
+}
+
+void CDS4830A_srvDlg::UTBDevice_MonitorBreak()
+{
+	StopTimer();
+}
+
 
 void CDS4830A_srvDlg::OnTimer(UINT_PTR nIDEvent)
 {
@@ -1128,37 +1118,8 @@ void CDS4830A_srvDlg::OnTimer(UINT_PTR nIDEvent)
 	{
 	case TIMER_ID_SYSTEM:	// Proceed MCU COM Port Communication Arbitrage
 
-		// NOTE:
-		// FORMAT:
-		// Send 1 SHOW Request   --->
-		// Get  1 SHOW Responce  <---
-		
-		for (UCHAR k = 0; k < m_COMPortMsgQue.ucMsgCount; k++)
-		{
-			if (m_COMPortMsgQue.v_OID_SHOW[k].ucCounterValue == 0)
-			{
-				// [PROCEED]
-
-				// Monitor and Update Device Data 
-				channelFrame frFrameTmp;
-				m_pUTBDevice->ShowTable(TABLE_BOARD_SERVICE, &frFrameTmp); 
-
-
-				// restore Counter
-				m_COMPortMsgQue.v_OID_SHOW[k].ucCounterValue = m_COMPortMsgQue.v_OID_SHOW[k].ucCounterDivider - 1;
-			}
-			else
-			{
-				// [WAIT]
-
-				m_COMPortMsgQue.v_OID_SHOW[k].ucCounterValue--;
-			}
-
-		}
-		
-		
-
-
+		// Update device Info
+		m_UTBDevice.UpdateTables();
 
 		break;
 
@@ -1236,6 +1197,9 @@ void CDS4830A_srvDlg::OnTimer(UINT_PTR nIDEvent)
 // main/global Read Button
 void CDS4830A_srvDlg::OnBnClickedButtonRead()
 {
+	// > Disable Monitor Transactions
+	// NOTE: safe option, prevent any collision on COM Port 
+	UTBDevice_MonitorBreak();
 
 	// define User Active Page Value
 	BYTE uOrderPage;
@@ -1342,12 +1306,19 @@ void CDS4830A_srvDlg::OnBnClickedButtonRead()
 		// error check
 		break;
 	}
-	
+
+	// > Enable Monitor Transactions
+	UTBDevice_MonitorRestore();
+
 }
 
 // main/global Write Button
 void CDS4830A_srvDlg::OnBnClickedButtonWrite()
 {
+	// > Disable Monitor Transactions
+	// NOTE: safe option, prevent any collision on COM Port 
+	UTBDevice_MonitorBreak();
+
 	// select from Tabs
 	switch (m_tabCtrl_DS4830A.GetCurSel())
 	{
@@ -1447,6 +1418,10 @@ void CDS4830A_srvDlg::OnBnClickedButtonWrite()
 	default:
 		break;
 	}
+
+	// > Enable Monitor Transactions
+	UTBDevice_MonitorRestore();
+
 }
 
 

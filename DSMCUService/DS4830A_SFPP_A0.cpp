@@ -17,9 +17,9 @@ CDS4830A_SFPP_A0::CDS4830A_SFPP_A0(CWnd* pParent /*=NULL*/)
 
 }
 
-CDS4830A_SFPP_A0::CDS4830A_SFPP_A0(HID_SMBUS_DEVICE * pHidSmbus, CProgressCtrl * p_cPB_OP, CEdit * p_EDIT_STATUS, st_serviceData * p_service, CWnd* pParent  /*=NULL*/)
+CDS4830A_SFPP_A0::CDS4830A_SFPP_A0(CUTBDevice * pUTBDevice, CProgressCtrl * p_cPB_OP, CEdit * p_EDIT_STATUS, st_serviceData * p_service, CWnd* pParent  /*=NULL*/)
 	: CDialog(IDD_PROPPAGE_DS4830A_SFPP_A0, pParent)
-	, m_pHidSmbus(pHidSmbus)
+	, m_pUTBDevice(pUTBDevice)
 	, p_EDIT_STATUS(p_EDIT_STATUS)
 	, p_cPB_OP(p_cPB_OP)
 	, p_service(p_service)
@@ -317,52 +317,64 @@ void CDS4830A_SFPP_A0::OnBnClickedButton4()
 	// temp buffer for OP
 	BYTE v_Values[256];
 
-	// get Data from Device
-	BYTE retVal = m_Grid.DeviceSlave_Read(v_Values, SLAVEADDR_A0, 0, 256);
-	
-	if (retVal != HID_SMBUS_SUCCESS)
-	{
-		// error: Device Read
-		Trace(_T("Œÿ»¡ ¿. [ÍÓ‰: %02d] \n"), retVal);
+	// > Try to PROC
+	BYTE ucErrCode = 0;
+	BYTE iResult = 0;
+	iResult = m_pUTBDevice->I2C_Read(0x50, 256, I2C_MODE_NORMAL, v_Values, &ucErrCode);
 
-		CString str_ErrText;
-		switch (retVal)
-		{
-		case 1:
-			str_ErrText.AppendFormat(L"(MAXQBL_NO_DEVICE)");
+	// output to Grid
+	m_Grid.GridSFF_Write(v_Values, 0, 256);
 
-			break;
 
-		case 2:
-			str_ErrText.AppendFormat(L"(MAXQBL_DEV_INACCESSIBLE)");
+	//// get Data from Device
+	//BYTE retVal = m_Grid.DeviceSlave_Read(v_Values, SLAVEADDR_A0, 0, 256);
+	//
+	//if (retVal != HID_SMBUS_SUCCESS)
+	//{
+	//	// error: Device Read
+	//	Trace(_T("Œÿ»¡ ¿. [ÍÓ‰: %02d] \n"), retVal);
 
-			break;
+	//	CString str_ErrText;
+	//	switch (retVal)
+	//	{
+	//	case 1:
+	//		str_ErrText.AppendFormat(L"(MAXQBL_NO_DEVICE)");
 
-		case 3:
-			str_ErrText.AppendFormat(L"(MAXQBL_OP_FAILED)");
+	//		break;
 
-			break;
+	//	case 2:
+	//		str_ErrText.AppendFormat(L"(MAXQBL_DEV_INACCESSIBLE)");
 
-		case 4:
-			str_ErrText.AppendFormat(L"(MAXQBL_OP_WRONG)");
+	//		break;
 
-			break;
+	//	case 3:
+	//		str_ErrText.AppendFormat(L"(MAXQBL_OP_FAILED)");
 
-		default:
-			break;
-		}
-		
-		// err comment output
-		Trace(str_ErrText);
+	//		break;
 
-		return;
-		
-	}
-	else
-	{
-		// output to Grid
-		m_Grid.GridSFF_Write(v_Values, 0, 256);
-	}
+	//	case 4:
+	//		str_ErrText.AppendFormat(L"(MAXQBL_OP_WRONG)");
+
+	//		break;
+
+	//	default:
+	//		break;
+	//	}
+	//	
+	//	// err comment output
+	//	Trace(str_ErrText);
+
+	//	return;
+	//	
+	//}
+	//else
+	//{
+	//	// output to Grid
+	//	m_Grid.GridSFF_Write(v_Values, 0, 256);
+	//}
+
+
+
 
 	//Trace(_T("SUCCESS! \n"));
 	Trace(_T("”—œ≈ÿÕŒ.\n"));
@@ -397,16 +409,23 @@ void CDS4830A_SFPP_A0::OnBnClickedButton5()
 	// input from Grid
 	m_Grid.GridSFF_Read(v_Values, 0, 256);
 
-	// write op
+	
 	//m_Grid.DeviceSlave_WriteTimer(uValues, 0, SLAVEADDR_A0, 0, 256, 0, 0);
 
-	// set Data to Device
-	BYTE retVal = m_Grid.DeviceSlave_Write(v_Values, SLAVEADDR_A0, 0, 256);
+	// > Try to PROC
+	// write op
+	BYTE ucErrCode = 0;
+	BYTE iResult = 0;
+	iResult = m_pUTBDevice->I2C_Write(0x50, 256, I2C_MODE_NORMAL, v_Values, &ucErrCode);
 
-	if (retVal != HID_SMBUS_SUCCESS)
+	// set Data to Device
+	//BYTE retVal = m_Grid.DeviceSlave_Write(v_Values, SLAVEADDR_A0, 0, 256);
+
+
+	if (iResult != HID_SMBUS_SUCCESS)
 	{
 		// error: Device Write
-		Trace(_T("Œÿ»¡ ¿. [ÍÓ‰: %02d] \n"), retVal);
+		Trace(_T("Œÿ»¡ ¿. [ÍÓ‰: %02d] \n"), iResult);
 		return;
 	}
 

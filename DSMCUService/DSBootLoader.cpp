@@ -18,9 +18,9 @@ CDSBootLoader::CDSBootLoader(CWnd * pParent)
 }
 
 
-CDSBootLoader::CDSBootLoader(hSerialCDC* phSerialCDC, CWnd* pParent /*=NULL*/)
+CDSBootLoader::CDSBootLoader(CUTBDevice * pUTBDevice, CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_PROPPAGE_BOOTLOAD, pParent)
-	, m_phSerialCDC(phSerialCDC)
+	, m_pUTBDevice(pUTBDevice)
 {
 }
 
