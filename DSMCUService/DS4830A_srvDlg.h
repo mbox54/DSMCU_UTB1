@@ -21,6 +21,7 @@
 #include "DS4830A_SFPP_DDM.h"
 #include "DS4830A_SFPP_ER_TEC_APC.h"
 #include "TB_SFP_R2.h"
+#include "BoardAdmin.h"
 
 // System Grid
 #include "SLABCP2112.h"
@@ -309,7 +310,7 @@ protected:
 	struct st_UserTabOrder
 	{
 		unsigned char v_Tabs_Programmer[15] =	{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-		unsigned char v_Tabs_Engineer[15] =		{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+		unsigned char v_Tabs_Engineer[15] =		{ 0, 1, 2, 3, 0, 0, 0, 0, 0, 0, 0 };
 		unsigned char v_Tabs_Operator[15] =		{ 0, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0 };
 	} m_UserTabOrder;	
 
@@ -336,7 +337,7 @@ protected:
 	CDS4830A_SFPP_DDM				m_DS4830A_SFPP_DDM;
 	CDS4830A_SFPP_ER_TEC_APC		m_DS4830A_SFPP_TEC_APC;
 	CTB_SFP_R2						m_TB_SFP_R2;
-
+	CBoardAdmin						m_BoardAdmin;
 
 
 	// Service data operations/options

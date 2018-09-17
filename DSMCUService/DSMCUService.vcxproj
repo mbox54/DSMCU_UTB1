@@ -186,6 +186,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BoardAdmin.h" />
     <ClInclude Include="COMPort.h" />
     <ClInclude Include="DeviceCommunInterface.h" />
     <ClInclude Include="DlgTabCtrl.h" />
@@ -223,6 +224,7 @@
     <ClInclude Include="UTBDevice.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BoardAdmin.cpp" />
     <ClCompile Include="COMPort.cpp" />
     <ClCompile Include="DeviceCommunInterface.cpp" />
     <ClCompile Include="DlgTabCtrl.cpp" />

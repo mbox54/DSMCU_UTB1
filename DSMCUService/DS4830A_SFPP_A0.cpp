@@ -315,12 +315,24 @@ void CDS4830A_SFPP_A0::OnBnClickedButton4()
 	Trace(_T("ןאנאלוענû: A0, 256 באיע\n"));
 
 	// temp buffer for OP
+	BYTE v_Buf[64];
 	BYTE v_Values[256];
 
 	// > Try to PROC
 	BYTE ucErrCode = 0;
 	BYTE iResult = 0;
-	iResult = m_pUTBDevice->I2C_Read(0x50, 256, I2C_MODE_NORMAL, v_Values, &ucErrCode);
+
+	// Set Byte Addr
+	for (WORD k = 0; k < 256; k++)
+	{
+		v_Buf[0] = k;
+		iResult = m_pUTBDevice->I2C_Write(0x50, 1, I2C_MODE_NORMAL, v_Buf, &ucErrCode);
+
+		// Read Data
+		iResult = m_pUTBDevice->I2C_Read(0x50, 1, I2C_MODE_NORMAL, v_Buf, &ucErrCode);
+		v_Values[k] = v_Buf[0];
+	}
+
 
 	// output to Grid
 	m_Grid.GridSFF_Write(v_Values, 0, 256);
@@ -404,6 +416,7 @@ void CDS4830A_SFPP_A0::OnBnClickedButton5()
 	Trace(_T("ןאנאלוענû: A0, 256 באיע\n"));
 
 	// temp buffer for OP
+	BYTE v_Buf[256];
 	BYTE v_Values[256];
 
 	// input from Grid
@@ -416,7 +429,16 @@ void CDS4830A_SFPP_A0::OnBnClickedButton5()
 	// write op
 	BYTE ucErrCode = 0;
 	BYTE iResult = 0;
-	iResult = m_pUTBDevice->I2C_Write(0x50, 256, I2C_MODE_NORMAL, v_Values, &ucErrCode);
+
+
+	// Set Byte Addr
+	for (WORD k = 0; k < 256; k++)
+	{
+		v_Buf[0] = k;
+		v_Buf[1] = v_Values[k];
+		iResult = m_pUTBDevice->I2C_Write(0x50, 2, I2C_MODE_NORMAL, v_Buf, &ucErrCode);
+	}
+
 
 	// set Data to Device
 	//BYTE retVal = m_Grid.DeviceSlave_Write(v_Values, SLAVEADDR_A0, 0, 256);
@@ -431,6 +453,7 @@ void CDS4830A_SFPP_A0::OnBnClickedButton5()
 
 	Trace(_T("ÓÑÏÅØÍÎ.\n"));
 	Trace(_T("-----------------------\n"));
+
 }
 
 
