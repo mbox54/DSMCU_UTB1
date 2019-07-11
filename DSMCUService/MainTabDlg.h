@@ -293,7 +293,7 @@ public:
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_DS4830A };
+	enum { IDD = IDD_DLG_TABSWINDOW };
 #endif
 
 	// UTB Device Monitor Timer control
@@ -416,6 +416,8 @@ public:
 	afx_msg void OnPaint();
 	afx_msg void OnNMClickTabDs4830a(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedButtonTestboardReset();
+	afx_msg void OnBnClickedCancel2();
+	afx_msg void OnBnClickedCancel3();
 };
 
 

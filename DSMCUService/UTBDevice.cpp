@@ -18,6 +18,7 @@ CUTBDevice::CUTBDevice()
 {
 	this->InitDeviceQueue();
 
+	EnableMonitoring();
 }
 
 // active Constructor
@@ -26,6 +27,7 @@ CUTBDevice::CUTBDevice(CDeviceCommunInterface * pUTBDeviceCommun)
 {
 	this->InitDeviceQueue();
 
+	EnableMonitoring();
 }
 
 
@@ -55,6 +57,37 @@ void CUTBDevice::InitDeviceQueue()
 
 }
 
+void CUTBDevice::DisableMonitoring()
+{
+	this->m_bMonitoringEnable = 0;
+}
+
+void CUTBDevice::EnableMonitoring()
+{
+	this->m_bMonitoringEnable = 1;
+}
+
+BYTE CUTBDevice::ShowTable(BYTE ucTableNum, channelFrame * frTableOutput)
+{
+	BYTE ucResult = m_pUTBDevice->ShowTable(ucTableNum, frTableOutput);
+
+
+	return ucResult;
+}
+
+BYTE CUTBDevice::SetTable(BYTE ucTableNum, un_FRAME_COMMON frTableInput)
+{
+	BYTE ucOp_status;
+	BYTE ucResult = m_pUTBDevice->SetTable(ucTableNum, frTableInput, &ucOp_status);
+
+	if (ucOp_status == 1)
+	{
+		// [STATUS: OK]
+	}
+
+	return ucResult;
+}
+
 // Monitor and Update Device Data 
 int CUTBDevice::UpdateTables()
 {
@@ -62,6 +95,13 @@ int CUTBDevice::UpdateTables()
 	// FORMAT:
 	// Send 1 SHOW Request   --->
 	// Get  1 SHOW Responce  <---
+
+	// > check Enable monitoring
+	if (!this->m_bMonitoringEnable)
+	{
+		// skipped
+		return 2;
+	}
 
 	for (UCHAR k = 0; k < m_DeviceQueue.ucMsgCount; k++)
 	{

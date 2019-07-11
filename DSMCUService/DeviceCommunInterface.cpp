@@ -125,24 +125,13 @@ BYTE CDeviceCommunInterface::ShowTable(UCHAR ucTableNum, channelFrame * frTableO
 
 	// > Define frame
 	un_FRAME_COMMON frame_instance;
+	// Reset Frame;
+	memset(frame_instance.frameVal, 0x00, FRAME_SIZE);
 
 	// Set Header
 	frame_instance.structVal.structHeaderVal.ucOID = OID_TYPE_SHOW;
 	frame_instance.structVal.structHeaderVal.ucPAR = ucTableNum;
 	frame_instance.structVal.structHeaderVal.usTRN = m_TransactionCnt;
-
-	// Reset Body
-	frame_instance.structVal.unionBodyVal.structVal_TABLE_BOARD_SERVICE.structTableVal.ucDCAllState = 0;
-	frame_instance.structVal.unionBodyVal.structVal_TABLE_BOARD_SERVICE.structTableVal.ucDCMainState = 0;
-	frame_instance.structVal.unionBodyVal.structVal_TABLE_BOARD_SERVICE.structTableVal.ucMCUInitState = 0;
-	frame_instance.structVal.unionBodyVal.structVal_TABLE_BOARD_SERVICE.structTableVal.ucUSBConnectState = 0;
-
-	
-	//channelFrame frRequest;
-	
-	//frRequest[0] = OID_TYPE_SHOW;
-	//frRequest[1] = ucTableNum;
-	//frRequest[2] = m_TransactionCnt;
 
 
 	// > Send Request Frame
@@ -158,6 +147,47 @@ BYTE CDeviceCommunInterface::ShowTable(UCHAR ucTableNum, channelFrame * frTableO
 
 	// > Get Response Frame
 	iResult = Get(frTableOutput);
+
+
+	return iResult;
+}
+
+BYTE CDeviceCommunInterface::SetTable(BYTE ucTableNum, un_FRAME_COMMON frTableInput, BYTE * ucOp_status)
+{
+	// *** Send Request: SET ***
+
+	// new Transaction
+	m_TransactionCnt++;
+
+	// > Define frame
+
+	// Set Header
+	frTableInput.structVal.structHeaderVal.ucOID = OID_TYPE_SET;
+	frTableInput.structVal.structHeaderVal.ucPAR = ucTableNum;
+	frTableInput.structVal.structHeaderVal.usTRN = m_TransactionCnt;
+
+	// > Send Request Frame
+	int iResult = Send(frTableInput.frameVal);
+
+	// check error
+	if (iResult != DEVICE_OP_SUCCESS)
+	{
+		return iResult;
+	}
+
+	// *** Get Response: SET ***
+
+	// > Get Response Frame
+	un_FRAME_COMMON frame_instance;
+
+	// Reset Frame;
+	memset(frame_instance.frameVal, 0x00, FRAME_SIZE);
+
+	// Get response
+	iResult = Get(&frame_instance.frameVal);
+
+	// check OP Status	
+	*ucOp_status = frame_instance.structVal.unionBodyVal.structVal_SET_TABLE_RESPONSE.structTableVal.ucOperation_status;
 
 
 	return iResult;

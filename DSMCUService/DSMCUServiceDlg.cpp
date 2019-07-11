@@ -6,7 +6,7 @@
 #include "afxdialogex.h"
 
 #include "DSMCUServiceDlg.h"
-#include "DS4830A_srvDlg.h"
+#include "MainTabDlg.h"
 
 
 #ifdef _DEBUG

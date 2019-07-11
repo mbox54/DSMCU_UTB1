@@ -322,73 +322,21 @@ void CDS4830A_SFPP_A0::OnBnClickedButton4()
 	BYTE ucErrCode = 0;
 	BYTE iResult = 0;
 
-	// Set Byte Addr
-	for (WORD k = 0; k < 256; k++)
-	{
-		v_Buf[0] = k;
-		iResult = m_pUTBDevice->I2C_Write(0x50, 1, I2C_MODE_NORMAL, v_Buf, &ucErrCode);
+	// Set Byte Addr = 0
+	v_Buf[0] = 0;
+	iResult = m_pUTBDevice->I2C_Write(0x50, 1, I2C_MODE_NORMAL, v_Buf, &ucErrCode);
+	iResult = m_pUTBDevice->I2C_Read(0x50, 16, I2C_MODE_NORMAL, v_Buf, &ucErrCode);
 
+//	for (WORD k = 0; k < 16; k++)
+//	{
 		// Read Data
-		iResult = m_pUTBDevice->I2C_Read(0x50, 1, I2C_MODE_NORMAL, v_Buf, &ucErrCode);
-		v_Values[k] = v_Buf[0];
-	}
-
+//		iResult = m_pUTBDevice->I2C_Read(0x50, 1, I2C_MODE_NORMAL, v_Buf, &ucErrCode);
+//		v_Values[k] = v_Buf[0];
+//	}
 
 	// output to Grid
-	m_Grid.GridSFF_Write(v_Values, 0, 256);
+	m_Grid.GridSFF_Write(v_Buf, 0, 16);
 
-
-	//// get Data from Device
-	//BYTE retVal = m_Grid.DeviceSlave_Read(v_Values, SLAVEADDR_A0, 0, 256);
-	//
-	//if (retVal != HID_SMBUS_SUCCESS)
-	//{
-	//	// error: Device Read
-	//	Trace(_T("Œÿ»¡ ¿. [ÍÓ‰: %02d] \n"), retVal);
-
-	//	CString str_ErrText;
-	//	switch (retVal)
-	//	{
-	//	case 1:
-	//		str_ErrText.AppendFormat(L"(MAXQBL_NO_DEVICE)");
-
-	//		break;
-
-	//	case 2:
-	//		str_ErrText.AppendFormat(L"(MAXQBL_DEV_INACCESSIBLE)");
-
-	//		break;
-
-	//	case 3:
-	//		str_ErrText.AppendFormat(L"(MAXQBL_OP_FAILED)");
-
-	//		break;
-
-	//	case 4:
-	//		str_ErrText.AppendFormat(L"(MAXQBL_OP_WRONG)");
-
-	//		break;
-
-	//	default:
-	//		break;
-	//	}
-	//	
-	//	// err comment output
-	//	Trace(str_ErrText);
-
-	//	return;
-	//	
-	//}
-	//else
-	//{
-	//	// output to Grid
-	//	m_Grid.GridSFF_Write(v_Values, 0, 256);
-	//}
-
-
-
-
-	//Trace(_T("SUCCESS! \n"));
 	Trace(_T("”—œ≈ÿÕŒ.\n"));
 	Trace(_T("-----------------------\n"));
 
@@ -420,7 +368,7 @@ void CDS4830A_SFPP_A0::OnBnClickedButton5()
 	BYTE v_Values[256];
 
 	// input from Grid
-	m_Grid.GridSFF_Read(v_Values, 0, 256);
+	m_Grid.GridSFF_Read(v_Values, 0, 1);
 
 	
 	//m_Grid.DeviceSlave_WriteTimer(uValues, 0, SLAVEADDR_A0, 0, 256, 0, 0);
@@ -432,7 +380,7 @@ void CDS4830A_SFPP_A0::OnBnClickedButton5()
 
 
 	// Set Byte Addr
-	for (WORD k = 0; k < 256; k++)
+	for (WORD k = 0; k < 1; k++)
 	{
 		v_Buf[0] = k;
 		v_Buf[1] = v_Values[k];

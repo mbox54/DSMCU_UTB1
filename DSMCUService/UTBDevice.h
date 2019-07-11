@@ -16,8 +16,9 @@
 /////////////////////////////////////////////////////////////////////////////
 // Definitions
 /////////////////////////////////////////////////////////////////////////////
-#define TABLE_BOARD_SERVICE				0x01
-#define TABLE_BOARD_PORTS				0x02
+//#define TABLE_BOARD_SERVICE				0x01
+//#define TABLE_BOARD_PORTS				0x02
+
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -69,14 +70,25 @@ public:
 	// init
 	void InitDeviceQueue();
 
+	void DisableMonitoring();
+	void EnableMonitoring();
+
 	// Board
 	int UpdateTables();
+
+	// parent fuctions
+	BYTE ShowTable(BYTE ucTableNum, channelFrame * frTableOutput);
+	BYTE SetTable(BYTE ucTableNum, un_FRAME_COMMON frTableInput);
 
 	// I2C
 	BYTE I2C_Read(BYTE ucAddress, WORD ucCount, BYTE ucMode, BYTE * v_Data, BYTE * ucErrCode);
 	void I2C_Read_Proc(BYTE * v_Data);
 
 	BYTE I2C_Write(BYTE ucAddress, WORD ucCount, BYTE ucMode, BYTE * v_Data, BYTE * ucErrCode);
+
+
+private:
+	BYTE m_bMonitoringEnable;
 
 };
 

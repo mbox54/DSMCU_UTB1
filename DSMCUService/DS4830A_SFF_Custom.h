@@ -3,9 +3,12 @@
 /////////////////////////////////////////////////////////////////////////////
 // Includes
 /////////////////////////////////////////////////////////////////////////////
-#include "SLABCP2112.h"
-#include "GridSFF_CP2112.h"
 #include "afxwin.h"
+
+#include "SLABCP2112.h"
+#include "UTBDevice.h"
+
+#include "GridSFF_CP2112.h"
 
 
 // ##########################################################################
@@ -17,7 +20,7 @@ class CDS4830A_SFF_Custom : public CDialog
 
 public:
 	CDS4830A_SFF_Custom(CWnd* pParent = NULL);   // standard constructor
-	CDS4830A_SFF_Custom(HID_SMBUS_DEVICE * pHidSmbus, CProgressCtrl * p_cPB_OP, CEdit * p_EDIT_STATUS,  st_serviceData * p_service, CWnd * pParent = NULL);
+	CDS4830A_SFF_Custom(CUTBDevice* pUTBDevice, CProgressCtrl * p_cPB_OP, CEdit * p_EDIT_STATUS,  st_serviceData * p_service, CWnd * pParent = NULL);
 
 	virtual ~CDS4830A_SFF_Custom();
 
@@ -28,6 +31,7 @@ public:
 
 protected:
 	HID_SMBUS_DEVICE* m_pHidSmbus;
+	CUTBDevice* m_pUTBDevice;
 
 	// service data values
 	st_serviceData* p_service;
@@ -51,9 +55,9 @@ protected:
 
 	// Output sample
 	void Trace(LPCTSTR szFmt, ...);
+	void DeviceProc(BYTE ucOpType);
 
 	void EditHexControl(CEdit *pEdit);
-
 	void EditInit();
 
 	// Grid events
@@ -111,4 +115,9 @@ public:
 //	CEdit m;
 	CString m_SelCount;
 	BOOL m_bCheck_TabSelect;
+	int m_iRadio_Mode;
+	CString m_strEdit_ByteMode;
+	CString m_strEdit_PacketDelay;
+	CString m_strEdit_SlaAddrPass;
+	CString m_strEdit_SlaAddrTable;
 };

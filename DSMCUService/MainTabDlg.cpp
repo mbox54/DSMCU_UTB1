@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include "afxdialogex.h"
 
-#include "DS4830A_srvDlg.h"
+#include "MainTabDlg.h"
 
 
 
@@ -14,13 +14,13 @@ IMPLEMENT_DYNAMIC(CDS4830A_srvDlg, CDialog)
 
 
 CDS4830A_srvDlg::CDS4830A_srvDlg(CWnd * pParent)
-	: CDialog(IDD_DS4830A, pParent)
+	: CDialog(IDD_DLG_TABSWINDOW, pParent)
 	, m_bCheck_Autoscan(FALSE)
 {
 }
 
 CDS4830A_srvDlg::CDS4830A_srvDlg(CDeviceCommunInterface * pUTBDeviceCommun, BYTE mode, DWORD CP2112_activeDeviceNum, st_CP2112_GPConf CP2112_GPConf, CWnd* pParent /*=NULL*/)
-	: CDialog(IDD_DS4830A, pParent)
+	: CDialog(IDD_DLG_TABSWINDOW, pParent)
 	, m_UTBDevice(pUTBDeviceCommun)
 	, m_Mode(mode)
 	, mc_CP2112_activeDeviceNum(CP2112_activeDeviceNum)
@@ -29,11 +29,12 @@ CDS4830A_srvDlg::CDS4830A_srvDlg(CDeviceCommunInterface * pUTBDeviceCommun, BYTE
 	, m_GridSystem(m_pHidSmbus, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
 	// pages
 
+	, m_pageDSBootLoader(&m_UTBDevice)
 	, m_BoardAdmin(&m_UTBDevice)
 	, m_DS4830A_SFPP_A0(&m_UTBDevice, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
 	, m_DS4830A_SFPP_A2(m_pHidSmbus, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
 	, m_DS4830A_SFPP_T10(m_pHidSmbus, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
-	, m_DS4830A_SFPP_Custom(m_pHidSmbus, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
+	, m_DS4830A_SFPP_Custom(&m_UTBDevice, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
 	, m_DS4830A_SFPP_LR_CONF_OPER(m_pHidSmbus, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
 	, m_DS4830A_SFPP_LR_CONF_ENGI(m_pHidSmbus, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
 	, m_DS4830A_SFPP_MSA(m_pHidSmbus, &m_cPB_OP, &m_EDIT_STATUS, &m_service)
@@ -101,7 +102,7 @@ void CDS4830A_srvDlg::InitDlgTabs()
 
 	case MD_ENGINEER:
 //		m_tabCtrl_DS4830A.InsertItem(0, _T("Flasher"), IDD_PROPPAGE_BOOTLOAD, &m_pageDSBootLoader);
-		m_tabCtrl_DS4830A.InsertItem(0, _T("Board"), IDD_PROPPAGE_BOOTLOAD, &m_pageDSBootLoader);
+		m_tabCtrl_DS4830A.InsertItem(0, _T("Board"), IDD_PROPPAGE_BOARD_ADMIN, &m_BoardAdmin);
 		m_tabCtrl_DS4830A.InsertItem(1, _T("A0"), IDD_PROPPAGE_DS4830A_SFPP_A0, &m_DS4830A_SFPP_A0);
 		m_tabCtrl_DS4830A.InsertItem(2, _T("A2"), IDD_PROPPAGE_DS4830A_SFPP_A2, &m_DS4830A_SFPP_A2);
 		m_tabCtrl_DS4830A.InsertItem(3, _T("Custom"), IDD_PROPPAGE_DS4830A_SFPP_CUSTOM, &m_DS4830A_SFPP_Custom);
@@ -176,6 +177,8 @@ BEGIN_MESSAGE_MAP(CDS4830A_srvDlg, CDialog)
 	ON_WM_PAINT()
 	ON_NOTIFY(NM_CLICK, IDC_TAB_DS4830A, &CDS4830A_srvDlg::OnNMClickTabDs4830a)
 	ON_BN_CLICKED(IDC_BUTTON_TESTBOARD_RESET, &CDS4830A_srvDlg::OnBnClickedButtonTestboardReset)
+	ON_BN_CLICKED(IDCANCEL2, &CDS4830A_srvDlg::OnBnClickedCancel2)
+	ON_BN_CLICKED(IDCANCEL3, &CDS4830A_srvDlg::OnBnClickedCancel3)
 END_MESSAGE_MAP()
 
 
@@ -1127,47 +1130,6 @@ void CDS4830A_srvDlg::OnTimer(UINT_PTR nIDEvent)
 
 		break;
 
-/*
-		if (m_service.activeState == SERVICE_STATE_ENABLE)
-		{
-			// NOP
-		}
-		else
-			if (m_service.activeState == SERVICE_STATE_DISABLE)
-			{
-				// NOP
-			}
-			else
-				if (m_service.activeState == SERVICE_STATE_ENABLING)
-				{
-					// enable Controls
-					CWnd *wndTab = this->GetDlgItem(IDC_TAB_DS4830A);
-					wndTab->EnableWindow(TRUE);
-
-					CWnd *wndBtn1 = this->GetDlgItem(IDC_BUTTON_READ);
-					wndBtn1->EnableWindow(TRUE);
-					CWnd *wndBtn2 = this->GetDlgItem(IDC_BUTTON_WRITE);
-					wndBtn2->EnableWindow(TRUE);
-
-					// change status state
-					m_service.activeState = SERVICE_STATE_ENABLE;
-				}
-				else
-					if (m_service.activeState == SERVICE_STATE_DISABLING)
-					{
-						// disable Controls
-						CWnd *wndTab = this->GetDlgItem(IDC_TAB_DS4830A);
-						wndTab->EnableWindow(FALSE);
-
-						CWnd *wndBtn1 = this->GetDlgItem(IDC_BUTTON_READ);
-						wndBtn1->EnableWindow(FALSE);
-						CWnd *wndBtn2 = this->GetDlgItem(IDC_BUTTON_WRITE);
-						wndBtn2->EnableWindow(FALSE);
-
-						// change status state
-						m_service.activeState = SERVICE_STATE_DISABLE;
-					}
-*/		
 
 	case TIMER_ID_DDM:	// Proceed DDM output Status	
 		
@@ -1340,12 +1302,8 @@ void CDS4830A_srvDlg::OnBnClickedButtonWrite()
 
 		break;
 
-	case 3:	//m_DS4830A_SFPP_T10
-		m_service.activeState = SERVICE_STATE_DISABLING;
-
-		m_DS4830A_SFPP_T10.OnBnClickedButton5();
-
-		m_service.activeState = SERVICE_STATE_ENABLING;
+	case 3:	//m_DS4830A_SFPP_Custom
+		m_DS4830A_SFPP_Custom.OnBnClickedButton5();
 
 		break;
 
@@ -1548,41 +1506,41 @@ void CDS4830A_srvDlg::OnNMClickTabDs4830a(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 
 	// select from User Tab Value
-	switch (uUserPage)
-	{
+	//switch (uUserPage)
+	//{
 
 
-	case 9:	//m_DS4830A_SFPP_TEC_APC	
+	//case 9:	//m_DS4830A_SFPP_TEC_APC	
 
-		m_DS4830A_SFPP_TEC_APC.StartTimer();
+	//	m_DS4830A_SFPP_TEC_APC.StartTimer();
 
-		m_TB_SFP_R2.StopTimer();
+	//	m_TB_SFP_R2.StopTimer();
 
-		break;
+	//	break;
 
-	case 10:	//m_DS4830A_SFPP_TEC_APC	
+	//case 10:	//m_DS4830A_SFPP_TEC_APC	
 
-		m_TB_SFP_R2.StartTimer();
+	//	m_TB_SFP_R2.StartTimer();
 
-		m_DS4830A_SFPP_TEC_APC.StopTimer();
+	//	m_DS4830A_SFPP_TEC_APC.StopTimer();
 
-		break;
+	//	break;
 
 
 
-	default:
+	//default:
 
-		// TEC Monitor Timer OP
-		// TestBoard Monitor OP
-		if ((m_Mode == MD_PROGRAMMER) || (m_Mode == MD_ENGINEER))
-		{
-			m_DS4830A_SFPP_TEC_APC.StopTimer();
+	//	// TEC Monitor Timer OP
+	//	// TestBoard Monitor OP
+	//	if ((m_Mode == MD_PROGRAMMER) || (m_Mode == MD_ENGINEER))
+	//	{
+	//		m_DS4830A_SFPP_TEC_APC.StopTimer();
 
-			m_TB_SFP_R2.StopTimer();
-		}
+	//		m_TB_SFP_R2.StopTimer();
+	//	}
 
-		break;
-	}
+	//	break;
+	//}
 
 
 	*pResult = 0;
@@ -1618,4 +1576,16 @@ void CDS4830A_srvDlg::OnBnClickedButtonTestboardReset()
 	{
 		Trace(_T("”—“–Œ…—“¬Œ œ≈–≈«¿√–”∆≈ÕŒ.\n"), retVal);
 	}
+}
+
+
+void CDS4830A_srvDlg::OnBnClickedCancel2()
+{
+	UTBDevice_MonitorRestore();
+}
+
+
+void CDS4830A_srvDlg::OnBnClickedCancel3()
+{
+	UTBDevice_MonitorBreak();
 }

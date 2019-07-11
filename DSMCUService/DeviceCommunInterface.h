@@ -42,6 +42,12 @@
 // Table Type
 #define TABLE_BOARD_SERVICE				0x01
 #define TABLE_BOARD_PORTS				0x02
+#define TABLE_POWER_SOURCE				0x03
+
+// Set
+#define SET_BOARD_SERVICE				0x01
+#define SET_BOARD_PORTS					0x02
+#define SET_POWER_SOURCE				0x03
 
 // i2c Frame Type
 #define I2C_TYPE_PROC					0x00
@@ -99,6 +105,40 @@ struct st_TABLE_BOARD_PORTS
 										// FORMAT: 1 = , 2 = , 3 = , 4 = , 5 = , 6 = , 7 = .
 										// ..
 };
+
+struct st_TABLE_Power_Source
+{
+	// 7 BYTE
+	BYTE bV_IN_Proh;
+	BYTE b1V8_Proh;
+	BYTE b3V3_Proh;
+	BYTE b5V_State;
+	BYTE b5V_Enable;
+	BYTE b3V3_Enable;
+	BYTE b1V8_Enable;
+};
+
+
+// SET Tables
+struct st_SET_TABLE_Power_Source
+{
+	// 7 BYTE
+	BYTE bV_IN_Proh;
+	BYTE b1V8_Proh;
+	BYTE b3V3_Proh;
+	BYTE b5V_State;
+	BYTE b5V_Enable;
+	BYTE b3V3_Enable;
+	BYTE b1V8_Enable;
+};
+
+struct st_SET_TABLE_RESPONSE
+{
+	// 1 BYTE
+	BYTE ucOperation_status;
+
+};
+
 
 // // struct i2c
 // [I2C]
@@ -163,6 +203,36 @@ struct st_FRAME_TABLE_BOARD_PORTS
 	BYTE v_Reserved[58];
 };
 
+struct st_FRAME_TABLE_Power_Source
+{
+	// 7 BYTE
+	struct st_TABLE_Power_Source structTableVal;
+
+	// 53 BYTE
+	BYTE v_Reserved[53];
+};
+
+
+// [SET TABLES]
+struct st_FRAME_SET_TABLE_Power_Source
+{
+	// 7 BYTE
+	struct st_SET_TABLE_Power_Source structTableVal;
+
+	// 53 BYTE
+	BYTE v_Reserved[53];
+};
+
+struct st_FRAME_SET_TABLE_RESPONSE
+{
+	// 1 BYTE
+	struct st_SET_TABLE_RESPONSE structTableVal;
+
+	// 59 BYTE
+	BYTE v_Reserved[59];
+};
+
+
 // [I2C]
 struct st_FRAME_I2C_TYPE_PROC_REQUEST
 {
@@ -200,6 +270,7 @@ struct st_FRAME_I2C_TYPE_TRASM_RESPONSE
 	BYTE v_Reserved[58];
 };
 
+
 // union 
 // specific, body type
 typedef union
@@ -210,6 +281,11 @@ typedef union
 	// Tables
 	struct st_FRAME_TABLE_BOARD_SERVICE structVal_TABLE_BOARD_SERVICE;
 	struct st_FRAME_TABLE_BOARD_PORTS structVal_TABLE_BOARD_PORTS;
+	struct st_FRAME_TABLE_Power_Source structVal_TABLE_Power_Source;
+
+	// Set Tables
+	struct st_FRAME_SET_TABLE_Power_Source structVal_SET_TABLE_Power_Source;
+	struct st_FRAME_SET_TABLE_RESPONSE structVal_SET_TABLE_RESPONSE;
 
 	// i2c
 	struct st_FRAME_I2C_TYPE_PROC_REQUEST structVal_I2C_TYPE_PROC_REQUEST;
@@ -281,7 +357,8 @@ public:
 
 	// cmd: combined
 	BYTE ShowTable(UCHAR ucTableNum, channelFrame * frTableOutput);
-	
+	BYTE SetTable(BYTE ucTableNum, un_FRAME_COMMON frTableInput, BYTE * ucOp_status);
+
 	// I2C
 	BYTE I2C_Read_Init_Request(BYTE ucAddress, WORD ucCount, BYTE ucMode, BYTE * ucErrCode);
 	BYTE I2C_Read_Init_Response(BYTE * ucStatus, BYTE * ucErrCode);

@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{84AA8D73-84F8-4BCD-BBC7-B109BE116C75}</ProjectGuid>
     <RootNamespace>DSMCUService</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <Keyword>MFCProj</Keyword>
     <ProjectName>UTB_Service</ProjectName>
   </PropertyGroup>
@@ -29,14 +29,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
@@ -44,14 +44,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
@@ -199,7 +199,7 @@
     <ClInclude Include="DS4830A_SFPP_ER_ENGI.h" />
     <ClInclude Include="DS4830A_SFPP_A0.h" />
     <ClInclude Include="DS4830A_SFPP_A2.h" />
-    <ClInclude Include="DS4830A_srvDlg.h" />
+    <ClInclude Include="MainTabDlg.h" />
     <ClInclude Include="DSBootLoader.h" />
     <ClInclude Include="DSMCUService.h" />
     <ClInclude Include="DSMCUServiceDlg.h" />
@@ -237,7 +237,7 @@
     <ClCompile Include="DS4830A_SFPP_ER_ENGI.cpp" />
     <ClCompile Include="DS4830A_SFPP_A0.cpp" />
     <ClCompile Include="DS4830A_SFPP_A2.cpp" />
-    <ClCompile Include="DS4830A_srvDlg.cpp" />
+    <ClCompile Include="MainTabDlg.cpp" />
     <ClCompile Include="DSBootLoader.cpp" />
     <ClCompile Include="DSMCUService.cpp" />
     <ClCompile Include="DSMCUServiceDlg.cpp" />

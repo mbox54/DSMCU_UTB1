@@ -23,13 +23,18 @@ CDS4830A_SFF_Custom::CDS4830A_SFF_Custom(CWnd* pParent /*=NULL*/)
 	, m_SelAddr(_T(""))
 	, m_SelCount(_T(""))
 	, m_bCheck_TabSelect(FALSE)
+	, m_iRadio_Mode(0)
+	, m_strEdit_ByteMode(_T(""))
+	, m_strEdit_PacketDelay(_T(""))
+	, m_strEdit_SlaAddrPass(_T(""))
+	, m_strEdit_SlaAddrTable(_T(""))
 {
 
 }
 
-CDS4830A_SFF_Custom::CDS4830A_SFF_Custom(HID_SMBUS_DEVICE * pHidSmbus, CProgressCtrl * p_cPB_OP, CEdit * p_EDIT_STATUS, st_serviceData * p_service, CWnd * pParent)
+CDS4830A_SFF_Custom::CDS4830A_SFF_Custom(CUTBDevice* pUTBDevice, CProgressCtrl * p_cPB_OP, CEdit * p_EDIT_STATUS, st_serviceData * p_service, CWnd * pParent)
 	: CDialog(IDD_PROPPAGE_DS4830A_SFPP_CUSTOM, pParent)
-	, m_pHidSmbus(pHidSmbus)
+	, m_pUTBDevice(pUTBDevice)
 	, p_EDIT_STATUS(p_EDIT_STATUS)
 	, p_cPB_OP(p_cPB_OP)
 	, p_service(p_service)
@@ -68,6 +73,11 @@ void CDS4830A_SFF_Custom::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_SELCNT, m_SelCount);
 	DDV_MaxChars(pDX, m_SelCount, 3);
 	DDX_Check(pDX, IDC_CHECK_TABENABLE, m_bCheck_TabSelect);
+	DDX_Radio(pDX, IDC_RADIO_MODE, m_iRadio_Mode);
+	DDX_Text(pDX, IDC_EDIT_BYTEMODE, m_strEdit_ByteMode);
+	DDX_Text(pDX, IDC_EDIT_PACKETDELAY, m_strEdit_PacketDelay);
+	DDX_Text(pDX, IDC_EDIT_SLAADDRPASS, m_strEdit_SlaAddrPass);
+	DDX_Text(pDX, IDC_EDIT_SLAADDRTABL, m_strEdit_SlaAddrTable);
 }
 
 
@@ -96,6 +106,365 @@ void CDS4830A_SFF_Custom::Trace(LPCTSTR szFmt, ...)
 	m_TraceWnd.LineScroll(m_TraceWnd.GetLineCount() - 4);
 }
 
+
+void CDS4830A_SFF_Custom::DeviceProc(BYTE ucOpType)
+{
+	UpdateData(TRUE);
+
+	BYTE ucSlaAddr = (BYTE)_tcstoul(m_SLA_ADDR, NULL, 16);
+	// complience for Cypress I2C header byte
+	ucSlaAddr = ucSlaAddr >> 1;
+
+	WORD usPacketDelay = (WORD)_tcstoul(m_strEdit_PacketDelay, NULL, 16);
+
+	BYTE ucByteAddr = 0;
+	WORD usByteCount = 0;
+
+	// [MODE: SLAVE PAGE STANDARD]
+	if (m_iRadio_Mode == 0)
+	{
+		// Set profile
+		ucByteAddr = 0;
+		usByteCount = 128;
+
+		Trace(_T("–≈∆»Ã: ¬ÂıÌˇˇ ÒÚ‡ÌËˆ‡.\n"));
+	}
+	// [MODE: SLAVE PAGE ADDITION]
+	else if (m_iRadio_Mode == 1)
+	{
+		// Set profile
+		ucByteAddr = 128;
+		usByteCount = 128;
+
+		Trace(_T("–ÂÊËÏ: ÌËÊÌˇˇ ÒÚ‡ÌËˆ‡.\n"));
+	}
+	// [MODE: SLAVE CUSTOM RANGE]
+	else if (m_iRadio_Mode == 2)
+	{
+		// Set profile from controls
+		ucByteAddr = (BYTE)_tcstoul(m_SelAddr, NULL, 16);
+		usByteCount = (WORD)_tcstoul(m_SelCount, NULL, 10);
+
+		Trace(_T("–≈∆»Ã: ÔÓËÁ‚ÓÎ¸Ì‡ˇ Ó·Î‡ÒÚ¸.\n"));
+
+		// SafeCheck
+		if (ucByteAddr > 0xFF)
+		{
+			// [CORRECTION]
+
+			ucByteAddr = 0xFF;
+
+			m_SelAddr.Truncate(0);
+			m_SelAddr.Append(_T("FF"));
+
+			UpdateData(FALSE);
+
+			Trace(_T("¬Õ»Ã¿Õ»≈! ¿‰ÂÒ ·‡ÈÚ‡ ‚ÌÂ ‰Ë‡Ô‡ÁÓÌ‡.\n"));
+			Trace(_T("¿¬“Œ Œ––≈ ÷»ﬂ œ–»Ã≈Õ≈Õ¿.\n"));
+		}
+
+		if (ucByteAddr + usByteCount > 256)
+		{
+			// [CORRECTING]
+
+			usByteCount = 256 - ucByteAddr;
+
+			m_SelAddr.Truncate(0);
+			m_SelAddr.AppendFormat(_T("%d"), usByteCount);
+			UpdateData(FALSE);
+
+			Trace(_T("¬Õ»Ã¿Õ»≈! –‡ÁÏÂ Ó·Î‡ÒÚË ‚ÌÂ ‰Ë‡Ô‡ÁÓÌ‡.\n"));
+			Trace(_T("¿¬“Œ Œ––≈ ÷»ﬂ œ–»Ã≈Õ≈Õ¿.\n"));
+		}
+		
+	}
+
+	// check Page password Option
+	if (this->m_bCheck_PasEnable)
+	{
+		Trace(_T("¬¬Œƒ œ¿–ŒÀﬂ.\n"));
+
+		BYTE ucPassAddr = (BYTE)_tcstoul(m_sEdit_PasAddr, NULL, 16);
+		BYTE ucPassValue = (BYTE)_tcstoul(m_SLA_ADDR, NULL, 16);
+		
+		BYTE ucSlaAddrPass = (BYTE)_tcstoul(m_strEdit_SlaAddrPass, NULL, 16);
+		// complience for Cypress I2C header byte
+		ucSlaAddrPass = ucSlaAddrPass >> 1;
+
+		// get Password Value
+		CString strHex;
+		BYTE v_PassSymbols[4];
+		for (BYTE k = 0; k < 4; k++)
+		{
+			char cPassLetter[2];
+			cPassLetter[0] = m_sEdit_PasValue[k * 2];
+			cPassLetter[1] = m_sEdit_PasValue[k * 2 + 1];
+
+			strHex.AppendChar(cPassLetter[0]);
+			strHex.AppendChar(cPassLetter[1]);
+
+			// convert to Byte
+			unsigned char byte_passLetter;
+			byte_passLetter = (BYTE)_tcstoul(strHex, NULL, 16);
+
+			v_PassSymbols[k] = byte_passLetter;
+
+			strHex.Truncate(0);
+		}
+
+		// > Send password		
+		BYTE ucErrCode = 0;
+		BYTE iResult = 0;
+
+		BYTE v_ValueBuf[5];
+		v_ValueBuf[0] = ucPassAddr;
+		memcpy(v_ValueBuf + 1, v_PassSymbols, 4);
+
+		// write pass in Device
+		iResult = m_pUTBDevice->I2C_Write(ucSlaAddrPass, 5, I2C_MODE_NORMAL, v_ValueBuf, &ucErrCode);
+
+		// set Delay
+		Sleep(usPacketDelay);
+	}
+
+	// check Page select Option
+	if (m_bCheck_TabSelect)
+	{
+		Trace(_T("¬¬Œƒ “¿¡À»÷€.\n"));
+
+		// get Page Value from controls
+		BYTE uTablAddr = (BYTE)_tcstoul(m_TABL_ADDR, NULL, 16);
+		BYTE uTablName = (BYTE)_tcstoul(m_TABL_NAME, NULL, 16);
+
+		BYTE ucSlaAddrTable = (BYTE)_tcstoul(m_strEdit_SlaAddrTable, NULL, 16);
+		// complience for Cypress I2C header byte
+		ucSlaAddrTable = ucSlaAddrTable >> 1;
+
+		// > Send Table
+		BYTE ucErrCode = 0;
+		BYTE iResult = 0;
+
+		BYTE v_ValueBuf[2];
+		v_ValueBuf[0] = uTablAddr;
+		v_ValueBuf[1] = uTablName;
+
+		// write tabl in Device
+		iResult = m_pUTBDevice->I2C_Write(ucSlaAddrTable, 2, I2C_MODE_NORMAL, v_ValueBuf, &ucErrCode);
+
+		// set Delay
+		Sleep(usPacketDelay);
+	}
+
+	p_cPB_OP->SetPos(0);
+
+	// Device Proc
+	if (ucOpType == 0)
+	{
+		// [WRITE]
+
+		Trace(_T("Œœ≈–¿÷»ﬂ: «¿œ»—‹.\n"));
+
+		BYTE ucErrCode = 0;
+		BYTE iResult = 0;
+
+		// temp buffer for OP
+		BYTE v_Values_Grid[256];
+		BYTE v_Values[256];
+
+		// Do Write Op
+		Trace(_T("[ÓÚÔ‡‚Í‡ ·‡ÈÚÓ‚ %d].\n"), usByteCount);
+		iResult = m_pUTBDevice->I2C_Write(ucSlaAddr, usByteCount + 1, I2C_MODE_NORMAL, v_Values, &ucErrCode);
+
+		// # define number of packets, proc every packet
+		WORD usPacketSize = (WORD)_tcstoul(m_strEdit_ByteMode, NULL, 10);
+		WORD usRoundCount = usByteCount / usPacketSize;
+		WORD usLastPacketSize = usByteCount - usPacketSize * usRoundCount;
+		WORD usRoundAddr = ucByteAddr;
+		BYTE v_RoundBuf[256 + 1];
+
+		// rounds
+		for (WORD k = 0; k < usRoundCount; k++)
+		{			
+			Trace(_T("[‚‚Ó‰ ‡‰ÂÒ‡ ·‡ÈÚ‡ %02d].\n"), usRoundAddr);
+
+			// Prepare Values to write
+			m_Grid.GridSFF_Read(v_Values, usRoundAddr, usPacketSize);
+			memcpy(v_RoundBuf + 1, v_Values, usPacketSize);
+			
+			// Set Byte Addr
+			v_RoundBuf[0] = usRoundAddr;
+
+			// Do Write Op
+			Trace(_T("[ÓÚÔ‡‚Í‡ ·‡ÈÚÓ‚ %d].\n"), usPacketSize);
+
+			iResult = m_pUTBDevice->I2C_Write(ucSlaAddr, usPacketSize + 1, I2C_MODE_NORMAL, v_RoundBuf, &ucErrCode);
+
+			if (iResult != I2C_OP_SUCCESS)
+			{
+				// [ERROR]
+
+				Trace(_T("Œÿ»¡ ¿. [ÍÓ‰: %02d] \n"), iResult);
+				return;
+			}
+
+			// set next start byte addr
+			usRoundAddr += usPacketSize;
+
+			// set Delay
+			Sleep(usPacketDelay);
+
+			// update output controls
+			p_cPB_OP->SetPos(96 / usRoundCount * k);
+		}//rounds
+
+		// last packet
+		if (usLastPacketSize > 0)
+		{
+			Trace(_T("[‚‚Ó‰ ‡‰ÂÒ‡ ·‡ÈÚ‡ %02d].\n"), usRoundAddr);
+
+			// Prepare Values to write
+			m_Grid.GridSFF_Read(v_Values, usRoundAddr, usLastPacketSize);
+			memcpy(v_RoundBuf + 1, v_Values, usLastPacketSize);
+
+			// Set Byte Addr
+			v_RoundBuf[0] = usRoundAddr;
+
+			// Do Write Op
+			Trace(_T("[ÓÚÔ‡‚Í‡ ·‡ÈÚÓ‚ %d].\n"), usLastPacketSize);
+
+			iResult = m_pUTBDevice->I2C_Write(ucSlaAddr, usLastPacketSize + 1, I2C_MODE_NORMAL, v_RoundBuf, &ucErrCode);
+
+			if (iResult != I2C_OP_SUCCESS)
+			{
+				// [ERROR]
+
+				Trace(_T("Œÿ»¡ ¿. [ÍÓ‰: %02d] \n"), iResult);
+				return;
+			}
+
+			// set Delay
+			Sleep(usPacketDelay);
+		}
+	}
+	else if (ucOpType == 1)
+	{
+		// [READ]
+
+		Trace(_T("Œœ≈–¿÷»ﬂ: ◊“≈Õ»≈.\n"));
+
+		BYTE ucErrCode = 0;
+		BYTE iResult = 0;
+
+		// temp buffer for OP
+		BYTE v_Values[256];
+
+
+		// # define number of packets, proc every packet
+		WORD usPacketSize = (WORD)_tcstoul(m_strEdit_ByteMode, NULL, 10); 
+		WORD usRoundCount = usByteCount / usPacketSize;
+		WORD usLastPacketSize = usByteCount - usPacketSize * usRoundCount;
+		WORD usRoundAddr = ucByteAddr;
+		BYTE v_RoundBuf[256];
+		WORD usDataShift = 0;
+
+		// rounds
+		for (WORD k = 0; k < usRoundCount; k++)
+		{
+			// Set Byte Addr
+			Trace(_T("[‚‚Ó‰ ‡‰ÂÒ‡ ·‡ÈÚ‡ %02d].\n"), usRoundAddr);
+
+			v_RoundBuf[0] = usRoundAddr;
+			iResult = m_pUTBDevice->I2C_Write(ucSlaAddr, 1, I2C_MODE_NORMAL, v_RoundBuf, &ucErrCode);
+
+			if (iResult != I2C_OP_SUCCESS)
+			{
+				// [ERROR]
+
+				Trace(_T("Œÿ»¡ ¿. [ÍÓ‰: %02d] \n"), iResult);
+				return;
+			}
+
+			// Do Read Op
+			Trace(_T("[ÔÓÎÛ˜ÂÌËÂ ·‡ÈÚÓ‚ %d].\n"), usPacketSize);
+
+			iResult = m_pUTBDevice->I2C_Read(ucSlaAddr, usPacketSize, I2C_MODE_NORMAL, v_RoundBuf, &ucErrCode);
+
+			if (iResult != I2C_OP_SUCCESS)
+			{
+				// [ERROR]
+
+				Trace(_T("Œÿ»¡ ¿. [ÍÓ‰: %02d] \n"), iResult);
+				return;
+			}
+
+			// place to memory
+			memcpy(v_Values + usDataShift, v_RoundBuf, usPacketSize);
+
+			// set next start byte addr
+			usRoundAddr += usPacketSize;
+			usDataShift += usPacketSize;
+
+			// set Delay
+			Sleep(usPacketDelay);
+
+			// update output controls
+			p_cPB_OP->SetPos(96 / usRoundCount * k);
+		}//rounds
+
+		// last packet
+		if (usLastPacketSize > 0)
+		{
+			// Set Byte Addr
+			Trace(_T("[‚‚Ó‰ ‡‰ÂÒ‡ ·‡ÈÚ‡ %02d].\n"), usRoundAddr);
+
+			v_RoundBuf[0] = usRoundAddr;
+			iResult = m_pUTBDevice->I2C_Write(ucSlaAddr, 1, I2C_MODE_NORMAL, v_Values, &ucErrCode);
+
+			if (iResult != I2C_OP_SUCCESS)
+			{
+				// [ERROR]
+
+				Trace(_T("Œÿ»¡ ¿. [ÍÓ‰: %02d] \n"), iResult);
+				return;
+			}
+
+			// Do Read Op
+			Trace(_T("[ÔÓÎÛ˜ÂÌËÂ ·‡ÈÚÓ‚ %d].\n"), usLastPacketSize);
+
+			iResult = m_pUTBDevice->I2C_Read(ucSlaAddr, usLastPacketSize, I2C_MODE_NORMAL, v_RoundBuf, &ucErrCode);
+
+			if (iResult != I2C_OP_SUCCESS)
+			{
+				// [ERROR]
+
+				Trace(_T("Œÿ»¡ ¿. [ÍÓ‰: %02d] \n"), iResult);
+				return;
+			}
+
+			// place to memory
+			memcpy(v_Values + usDataShift, v_RoundBuf, usLastPacketSize);
+
+			// set Delay
+			Sleep(usPacketDelay);
+		}
+		
+		// > Output to controls
+		// clear output Table
+		m_Grid.ClearTable();
+
+		// set output Table
+		m_Grid.GridSFF_Write(v_Values, ucByteAddr, usByteCount);
+
+	}//if (ucOpType == 1)
+
+	p_cPB_OP->SetPos(100);
+
+	UpdateData(FALSE);
+
+	Trace(_T("”—œ≈ÿÕŒ.\n\n"));	
+}
+
+
 void CDS4830A_SFF_Custom::EditHexControl(CEdit * pEdit)
 {
 	CString str;
@@ -116,13 +485,17 @@ void CDS4830A_SFF_Custom::EditHexControl(CEdit * pEdit)
 
 void CDS4830A_SFF_Custom::EditInit()
 {
-
 	// init EditBoxes
 
 	// set default text values
 	m_SLA_ADDR = (CString)"A2";
 	m_TABL_ADDR = (CString)"7F";
 	m_TABL_NAME = (CString)"00";
+
+	m_strEdit_ByteMode = (CString)"8";
+	m_strEdit_PacketDelay = (CString)"0";
+
+	m_strEdit_SlaAddrTable = (CString)"A2";
 
 	m_sEdit_PasAddr = (CString)"7B";
 	m_sEdit_PasValue = (CString)"4F505759";
@@ -237,255 +610,16 @@ void CDS4830A_SFF_Custom::OnBnClickedButton3()
 // Read Table Procedure
 void CDS4830A_SFF_Custom::OnBnClickedButton4()
 {
-	UpdateData(TRUE);
-
-	// get options
-	BYTE uSLA_ADDR = (BYTE)_tcstoul(m_SLA_ADDR, NULL, 16);
-	BYTE uTABL_ADDR = (BYTE)_tcstoul(m_TABL_ADDR, NULL, 16);
-	BYTE uTABL_NAME = (BYTE)_tcstoul(m_TABL_NAME, NULL, 16);
-
-	BYTE uPAS_ADDR = (BYTE)_tcstoul(m_sEdit_PasAddr, NULL, 16);
-	//BYTE uPAS_VALUE = (BYTE)_tcstoul(m_SLA_ADDR, NULL, 16);
-
-	BYTE uSEL_ADDR = (BYTE)_tcstoul(m_SelAddr, NULL, 16);
-	WORD uSEL_CNT = (WORD)_tcstoul(m_SelCount, NULL, 10);
-
-	// check Table Select
-	if (m_bCheck_TabSelect)
-	{
-		// send Table
-		// write tabl in Device
-		BYTE v_TablName[1] = { uTABL_NAME };
-
-		m_Grid.DeviceSlave_Write(v_TablName, uSLA_ADDR, uTABL_ADDR, 1);
-
-		Sleep(30);
-	}
-
-
-	// Check for Password 
-	if (this->m_bCheck_PasEnable)
-	{
-		unsigned char v_PassSymbols[4];
-		// get Password Bytes
-		CString strHex;
-
-		for (unsigned char k = 0; k < 4; k++ )
-		{
-			char cPassLetter[2];
-			cPassLetter[0] = m_sEdit_PasValue[k * 2];
-			cPassLetter[1] = m_sEdit_PasValue[k * 2 + 1];
-
-			strHex.AppendChar(cPassLetter[0]);
-			strHex.AppendChar(cPassLetter[1]);
-
-			// convert to Byte
-			unsigned char byte_passLetter;
-			byte_passLetter = (BYTE)_tcstoul(strHex, NULL, 16);
-
-			v_PassSymbols[k] = byte_passLetter;
-
-			strHex.Truncate(0);
-		}
-
-		// send password
-		// write pass in Device
-		m_Grid.DeviceSlave_Write(v_PassSymbols, uSLA_ADDR, uPAS_ADDR, 4);
-
-	}
-
-	// check values
-	unsigned char check_result = 0;
-
-	if (uSLA_ADDR > 0xF0)
-	{
-		check_result = 0x11;
-	}
-
-	BYTE ucAddrStart = 0;
-	WORD uiAddrCount = 256;
-
-	// check Address Select
-	if (this->m_bCheck_SelRange)
-	{
-		// SafeCheck
-		if (uSEL_ADDR < 0x100)
-		{
-			ucAddrStart = uSEL_ADDR;
-		}
-
-		if (uSEL_CNT <= 256)
-		{
-			if (uSEL_ADDR + uSEL_CNT > 0x100)
-			{
-				uiAddrCount = 0x100 - ucAddrStart;
-			}
-			else
-			{
-				uiAddrCount = uSEL_CNT;
-			}
-		}
-	}
-
-	// Read op
-	Sleep(10);
-
-	p_cPB_OP->SetPos(0);
-
-	BYTE v_ReadBytes[256];
-
-	// init with previous
-//	m_Grid.GridSFF_Read(v_ReadBytes, 0, 256);
-
-	// Read Selected
-	m_Grid.DeviceSlave_Read(v_ReadBytes, uSLA_ADDR, ucAddrStart, uiAddrCount);
-
-	p_cPB_OP->SetPos(100);
-
-	// > Set output
-	// clear Table
-	m_Grid.ClearTable();
-
-	// output Data
-	m_Grid.GridSFF_Write(v_ReadBytes, ucAddrStart, uiAddrCount);
-
-	UpdateData(FALSE);
+	// call Read Op
+	DeviceProc(1);
 
 }
 
 // Write Table Procedure
 void CDS4830A_SFF_Custom::OnBnClickedButton5()
 {
-	UpdateData(TRUE);
-
-	// get options
-	BYTE uSLA_ADDR = (BYTE)_tcstoul(m_SLA_ADDR, NULL, 16);
-	BYTE uTABL_ADDR = (BYTE)_tcstoul(m_TABL_ADDR, NULL, 16);
-	BYTE uTABL_NAME = (BYTE)_tcstoul(m_TABL_NAME, NULL, 16);
-
-	BYTE uPAS_ADDR = (BYTE)_tcstoul(m_sEdit_PasAddr, NULL, 16);
-	//BYTE uPAS_VALUE = (BYTE)_tcstoul(m_SLA_ADDR, NULL, 16);
-
-	BYTE uSEL_ADDR = (BYTE)_tcstoul(m_SelAddr, NULL, 16);
-	WORD uSEL_CNT = (WORD)_tcstoul(m_SelCount, NULL, 10);
-
-	// check Table Select
-	if (m_bCheck_TabSelect)
-	{
-		// send Table
-		// write tabl in Device
-		BYTE v_TablName[1] = { uTABL_NAME };
-
-		m_Grid.DeviceSlave_Write(v_TablName, uSLA_ADDR, uTABL_ADDR, 1);
-
-		Sleep(30);
-	}
-
-	// Check for Password 
-	if (this->m_bCheck_PasEnable)
-	{
-		unsigned char v_PassSymbols[4];
-		// get Password Bytes
-		CString strHex;
-
-		for (unsigned char k = 0; k < 4; k++)
-		{
-			char cPassLetter[2];
-			cPassLetter[0] = m_sEdit_PasValue[k * 2];
-			cPassLetter[1] = m_sEdit_PasValue[k * 2 + 1];
-
-			strHex.AppendChar(cPassLetter[0]);
-			strHex.AppendChar(cPassLetter[1]);
-
-			// convert to Byte
-			unsigned char byte_passLetter;
-			byte_passLetter = (BYTE)_tcstoul(strHex, NULL, 16);
-
-			v_PassSymbols[k] = byte_passLetter;
-
-			strHex.Truncate(0);
-		}
-
-		// send password
-		// write pass in Device
-		m_Grid.DeviceSlave_Write(v_PassSymbols, uSLA_ADDR, uPAS_ADDR, 4);
-
-	}
-
-	// > Write
-	unsigned char v_WrByte8[8];
-	BYTE v_WriteBytes[256];
-
-	BYTE ucAddrStart = 0;
-	WORD uiAddrCount = 256;
-
-	// check Select
-	if (this->m_bCheck_SelRange)
-	{
-		// SafeCheck
-		if (uSEL_ADDR < 0x100)
-		{
-			ucAddrStart = uSEL_ADDR;
-		}
-
-		if (uSEL_CNT <= 256)
-		{
-			if (uSEL_ADDR + uSEL_CNT > 0x100)
-			{
-				uiAddrCount = 0x100 - ucAddrStart;
-			}
-			else
-			{
-				uiAddrCount = uSEL_CNT;
-			}
-		}
-	}
-
-	p_cPB_OP->SetPos(40);
-
-	// get Values
-	m_Grid.GridSFF_Read(v_WriteBytes, ucAddrStart, uiAddrCount);
-
-	BYTE byteBlock_cnt = uiAddrCount / 8;
-	BYTE byteBlock_lst = uiAddrCount - byteBlock_cnt * 8;
-
-	// Write to Device
-	if (byteBlock_cnt > 0)
-	{
-		for (int k = 0; k < byteBlock_cnt; k++)
-		{
-			// prepare write buffer
-			for (int k2 = 0; k2 < 8; k2++)
-			{
-				v_WrByte8[k2] = v_WriteBytes[k * 8 + k2];
-			}
-
-			// i2c write
-			// NOTE: 8byte mode
-			m_Grid.DeviceSlave_Write(v_WrByte8, uSLA_ADDR, ucAddrStart + k * 8, 8);
-
-			// output progress
-			p_cPB_OP->SetPos(40 + k * 7);
-
-			Sleep(10);
-		}
-	}
-
-	if (byteBlock_lst > 0)
-	{
-		// prepare write buffer
-		for (int k2 = 0; k2 < byteBlock_lst; k2++)
-		{
-			v_WrByte8[k2] = v_WriteBytes[byteBlock_cnt * 8 + k2];
-		}
-
-		// i2c write
-		// NOTE: 8byte mode
-		m_Grid.DeviceSlave_Write(v_WrByte8, uSLA_ADDR, ucAddrStart + byteBlock_cnt * 8, byteBlock_lst);
-
-	}
-
-	p_cPB_OP->SetPos(100);
+	// call Write Op
+	DeviceProc(0);
 
 }
 
